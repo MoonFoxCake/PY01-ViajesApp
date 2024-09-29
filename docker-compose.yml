@@ -1,0 +1,72 @@
+version: '3.4'
+
+services:
+  webapp:
+    image: webapp
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: tasks
+      DB_USER: user
+      DB_PASSWORD: password
+      SECRET_KEY: K7/QY4uIwzVO7ydZkCrcDtJeZKgqWG20xfLDTSTfR8ycQXGvNHI2P87CxLU+33wv
+    networks:
+      - default
+
+  dbpostgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db
+    ports:
+      - 5432:5432
+    networks:
+      - default
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/:/docker-entrypoint-initdb.d
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: UserTest@Gmail.tec.cr
+      PGADMIN_DEFAULT_PASSWORD: pass
+    ports:
+      - 5050:80
+  dbmongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - default
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+
+  mongoexpress:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    networks:
+      - default
+    environment:
+      ME_CONFIG_MONGODB_SERVER: db
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  db-data:
+  
