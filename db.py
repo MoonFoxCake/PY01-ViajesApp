@@ -2,6 +2,7 @@ import os
 import psycopg2
 from enum import Enum
 from passlib.context import CryptContext  # Importa para manejar el hashing de contraseñas
+from pymongo import MongoClient
 
 class ResultCode(Enum):
     SUCCESS = 0
@@ -115,3 +116,15 @@ class Database:
 
         except psycopg2.errors.InFailedSqlTransaction:
             return ResultCode.FAILED_TRANSACTION
+
+class MongoDatabase:
+    def __init__(self):
+        self.client = MongoClient(
+            host=os.environ.get("DB_HOST"),
+            port=int(os.environ.get("DB_PORT")),
+            username=os.environ.get("DB_USER"),
+            password=os.environ.get("DB_PASSWORD"),
+            authSource=os.environ.get("DB_NAME")
+        )
+        self.db = self.client[os.environ.get("DB_NAME")]
+        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
