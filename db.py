@@ -3,6 +3,8 @@ import psycopg2
 from enum import Enum
 from passlib.context import CryptContext  # Importa para manejar el hashing de contraseñas
 from pymongo import MongoClient
+from typing import Optional, List
+from bson import ObjectId
 
 class ResultCode(Enum):
     SUCCESS = 0
@@ -128,3 +130,10 @@ class MongoDatabase:
         )
         self.db = self.client[os.environ.get("DB_NAME")]
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    def create_post(self, post):
+        try:
+            post_id = self.db.posts.insert_one(post.dict(by_alias=True)).inserted_id
+            return post_id
+        except Exception as e:
+            return None
+        

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, status, Response, Depends, HTTPException, Request  # Añadido 'Depends' y 'HTTPException' para manejar dependencias y errores
-from db import Database, ResultCode
+from db import Database, ResultCode, MongoDatabase
 from models.NewPost import NewPost
+from models.PostsMongo import NewPost
 from models.user import NewUser, DelUser, EditUser, UserAuth  # Añadido 'UserAuth' para manejar el login
 from typing import Optional
 import uvicorn
@@ -12,6 +13,7 @@ import os
 
 app = FastAPI()
 db = Database()
+mdb = MongoDatabase()
 
 # Configuraciones para JWT
 SECRET_KEY = os.environ.get("SECRET_KEY")  # Clave secreta para firmar el JWT, debería estar en una variable de entorno
@@ -145,15 +147,25 @@ async def edit_user(EditUser: EditUser, response: Response, request: Request):
                 response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
                 return {"message": "An internal error occurred"}
 
-@app.post("/createPost")
-async def create_post(post: NewPost, response: Response):
-    request = db.create_post(post)
-    match request:
-        case ResultCode.SUCCESS:
-            return {"message": "Post created successfully"}
-        case ResultCode.FAILED_TRANSACTION:
-            response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            return {"message": "An internal error occurred"}
+#@app.post("/createPost")
+#async def create_post(post: NewPost, response: Response):
+    #request = db.create_post(post)
+    #match request:
+        #case ResultCode.SUCCESS:
+        #    return {"message": "Post created successfully"}
+        #case ResultCode.FAILED_TRANSACTION:
+            #response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            #return {"message": "An internal error occurred"}
+        
+
+@app.post("/Mongocreate_post")
+async def create_post(post: NewPost):
+    result = mdb.create_post(post)
+    if result == ResultCode.SUCCESS:
+        return {"message": "Post created successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to create post")
+
 
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")
