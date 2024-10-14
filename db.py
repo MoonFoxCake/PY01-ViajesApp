@@ -21,8 +21,7 @@ class Database:
             database=os.environ.get("DB_NAME"),
             user=os.environ.get("DB_USER"),
             password=os.environ.get("DB_PASSWORD"),
-        )
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # Contexto para manejar el hashing
+        )# Contexto para manejar el hashing
 
     def register_user(self, user):
         try:
@@ -33,13 +32,10 @@ class Database:
             )
             self.connection.commit()
             cursor.close()
-            return ResultCode.SUCCESS
         except psycopg2.errors.InFailedSqlTransaction:
             self.connection.rollback()
             return ResultCode.FAILED_TRANSACTION
-        except psycopg2.errors.UniqueViolation:
-            self.connection.rollback()
-            return ResultCode.REPEATED_ELEMENT
+        
 
     def delete_user(self, user):
         try:
@@ -58,26 +54,6 @@ class Database:
             cursor.execute(
                 "CALL EditUser(%s, %s, %s, %s, %s)",
                 (user.UserID, user.name, user.mail, user.password, user.role),
-            )
-            self.connection.commit()
-            cursor.close()
-            return ResultCode.SUCCESS
-        except psycopg2.errors.InFailedSqlTransaction:
-            self.connection.rollback()
-            return ResultCode.FAILED_TRANSACTION
-
-    def create_post(self, post):
-        try:
-            cursor = self.connection.cursor()
-            cursor.execute(
-                "CALL CreatePost(%s, %s, %s, %s, %s)",
-                (
-                    post.AuthorID,
-                    post.Texto,
-                    post.MediaType,
-                    post.MediaURL,
-                    post.Caption,
-                ),
             )
             self.connection.commit()
             cursor.close()
@@ -120,20 +96,9 @@ class Database:
             return ResultCode.FAILED_TRANSACTION
 
 class MongoDatabase:
-    def __init__(self):
-        self.client = MongoClient(
-            host=os.environ.get("DB_HOST"),
-            port=int(os.environ.get("DB_PORT")),
-            username=os.environ.get("DB_USER"),
-            password=os.environ.get("DB_PASSWORD"),
-            authSource=os.environ.get("DB_NAME")
+    Connection = MongoClient(
+            "mongodb://localhost:27017/"
         )
-        self.db = self.client[os.environ.get("DB_NAME")]
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     def create_post(self, post):
-        try:
-            post_id = self.db.posts.insert_one(post.dict(by_alias=True)).inserted_id
-            return post_id
-        except Exception as e:
-            return None
+        db = Connection['ViajesDB']
         
