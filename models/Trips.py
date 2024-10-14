@@ -7,7 +7,6 @@ class Comment(BaseModel):
 
 
 class NewDestination(BaseModel):
-    _id: ObjectId = Field(alias="_id")
     AuthorID: str
     DestinationName: str
     Description: str
@@ -17,17 +16,14 @@ class NewDestination(BaseModel):
 
 
 class BucketListCreation(BaseModel):
-    _id: ObjectId = Field(alias="_id")
     AuthorID: str
-    Destinos : List[DestinationID] = []
-    #esto se debe de definir
+    Destinos : List[str] = []
     Likes: List[str] = []
     Comentarios: List[Comment] = []
     
 class CreateTrip(BaseModel):
-    _id: ObjectId = Field(alias="_id")
     Participants: List[str] = []
-    Destinos: List[DestinationID] = []
+    Destinos: List[str] = []
     Likes: List[str] = []
     Comentarios: List[Comment] = []
     

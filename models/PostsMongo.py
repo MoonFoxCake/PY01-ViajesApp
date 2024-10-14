@@ -6,7 +6,6 @@ class Comment(BaseModel):
     Texto: str
 
 class NewPost(BaseModel):
-    _id: ObjectId = Field(alias="_id")
     AuthorID: str
     Texto: Optional[str] = None
     MediaURL: Optional[str] = None
