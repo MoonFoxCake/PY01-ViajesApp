@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status, Response, Depends, HTTPException, Request  # Añadido 'Depends' y 'HTTPException' para manejar dependencias y errores
 from db import Database, ResultCode, MongoDatabase
-from models.NewPost import NewPost
+from models.NewPost import Comment, NewPost
 from models.PostsMongo import NewPost
 from models.user import NewUser, DelUser, EditUser, UserAuth  # Añadido 'UserAuth' para manejar el login
 from typing import Optional
@@ -62,6 +62,39 @@ async def authenticate_user(user: UserAuth):
         return Response(status_code=status.HTTP_401_UNAUTHORIZED)
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@app.post("/posts")
+async def create_post(post: NewPost):
+    result = mdb.create_post(post)
+    if result == ResultCode.SUCCESS:
+        return {"message": "Post created successfully"}
+    else:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@app.get("/posts/{post_id}")
+async def get_post(post_id: str):
+    result = mdb.get_post(post_id)
+    if result:
+        return result
+    else:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+@app.post("/posts/{post_id}/like")
+async def like_post(post_id: str):
+    result = mdb.like_post(post_id)
+    if result == ResultCode.SUCCESS:
+        return {"message": "Post liked successfully"}
+    else:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@app.post("/posts/{post_id}/comment")
+async def add_comment(post_id: str, comment: Comment):
+    result = mdb.add_comment(post_id, comment)
+    if result == ResultCode.SUCCESS:
+        return {"message": "Comment added successfully"}
+    else:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")
