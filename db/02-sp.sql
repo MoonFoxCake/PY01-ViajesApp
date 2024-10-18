@@ -1,4 +1,5 @@
-\c tasks
+\c userssm
+
 CREATE OR REPLACE PROCEDURE AddRole(Permiso VARCHAR)
 LANGUAGE plpgsql
 AS $$
@@ -7,8 +8,6 @@ BEGIN
     VALUES (Permiso);
 END;
 $$;
-
-
 
 CREATE OR REPLACE PROCEDURE AddUser(
     Name VARCHAR,
@@ -25,21 +24,28 @@ END;
 $$;
 
 CREATE OR REPLACE PROCEDURE EditUser(
-    p_UserID INT,
-    p_Name VARCHAR,
     p_Mail VARCHAR,
+    p_Name VARCHAR,
+    p_NewMail VARCHAR,
     p_Password VARCHAR,
     p_Role INT
 )
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    oldMail VARCHAR;
 BEGIN
+
+    SELECT Mail INTO oldMail
+    FROM Users
+    WHERE Mail = p_Mail;
+
     UPDATE Users
     SET Name = COALESCE(p_Name, Users.Name),
-        Mail = COALESCE(p_Mail, Users.Mail),
+        Mail = COALESCE(p_NewMail, Users.Mail),
         Password = COALESCE(p_Password, Users.Password),
         Role = COALESCE(p_Role, Users.Role)
-    WHERE UserID = p_UserID;
+    WHERE UserID = oldMail;
 END;
 $$;
 
@@ -113,10 +119,6 @@ $$;
 Call AddRole('Usuario');
 
 Call AddRole('Admin');
-
-
-
-
 
 
 --CALL ValidateUser('Test', 'Test', @result);

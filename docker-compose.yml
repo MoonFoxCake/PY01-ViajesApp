@@ -1,6 +1,7 @@
 version: '3.4'
 
 services:
+
   webapp:
     image: webapp
     build:
@@ -9,12 +10,11 @@ services:
     ports:
       - 8000:8000
     environment:
-      DB_HOST: db
+      DB_HOST: dbpostgres
       DB_PORT: 5432
-      DB_NAME: tasks
+      DB_NAME: userssm
       DB_USER: user
       DB_PASSWORD: password
-      SECRET_KEY: K7/QY4uIwzVO7ydZkCrcDtJeZKgqWG20xfLDTSTfR8ycQXGvNHI2P87CxLU+33wv
     networks:
       - default
 
@@ -29,38 +29,21 @@ services:
     networks:
       - default
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
       - ./db/:/docker-entrypoint-initdb.d
 
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: UserTest@Gmail.tec.cr
-      PGADMIN_DEFAULT_PASSWORD: pass
-    ports:
-      - 5050:80
-  dbmongo:
-    image: mongo
-    restart: always
-    ports:
-      - 27017:27017
-    networks:
-      - default
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
-
-  mongoexpress:
-    image: mongo-express
-    restart: always
-    ports:
-      - 8081:8081
-    networks:
-      - default
-    environment:
-      ME_CONFIG_MONGODB_SERVER: db
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+#  dbmongo:
+#    image: mongo
+#    restart: always
+#    ports:
+#      - 27017:27017
+#    networks:
+#      - default
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME: root
+#      MONGO_INITDB_ROOT_PASSWORD: root
+#    volumes:
+#      - mongodb-data:/data/db/
 
   redis:
     image: redis:latest
@@ -70,10 +53,38 @@ services:
     networks:
       - default
 
+# ---------------------------------------------------
+# Interfaces para las BD 
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: UserTest@Gmail.tec.cr
+      PGADMIN_DEFAULT_PASSWORD: pass
+    networks:
+      - default
+    ports:
+      - 5050:80
+
+#  mongoexpress:
+#    image: mongo-express
+#    restart: always
+#    ports:
+#      - 8081:8081
+#    networks:
+#      - default
+#    environment:
+#      ME_CONFIG_MONGODB_SERVER: dbmongo
+#      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+#      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+
+# ---------------------------------------------------
+
 networks:
   default:
     driver: bridge
 
 volumes:
-  db-data:
+  postgres-data:
+  mongodb-data:
   

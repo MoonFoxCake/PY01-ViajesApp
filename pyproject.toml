@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "py01-viajesapp"
+version = "0.1.0"
+description = ""
+authors = ["Nesscafe <darkskull328@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+uvicorn = "^0.31.0"
+fastapi = "^0.115.0"
+psycopg2 = "^2.9.9"
+pymongo = "^4.10.1"
+redis = "^5.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

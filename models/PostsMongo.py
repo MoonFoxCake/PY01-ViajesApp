@@ -2,7 +2,7 @@
 #from typing import Optional, List
 from pymongo import MongoClient
 from models.NewPost import NewPost  # NewPost desde el archivo de modelos
-from models.Comment import Comment  #  Comment
+#from models.Comment import Comment  #  Comment
 from bson.objectid import ObjectId
 from db import ResultCode
 
@@ -64,17 +64,17 @@ class MongoDatabase:
             print(f"Error liking post: {e}")
             return ResultCode.FAILED_TRANSACTION
 
-    def add_comment(self, post_id: str, comment: Comment):
-        try:
-            # Añade un comentario a un post en MongoDB
-            result = self.posts.update_one(
-                {"_id": ObjectId(post_id)},
-                {"$push": {"Comentarios": comment.dict()}}
-            )
-            if result.modified_count > 0:
-                return ResultCode.SUCCESS
-            else:
-                return ResultCode.FAILED_TRANSACTION
-        except Exception as e:
-            print(f"Error adding comment: {e}")
-            return ResultCode.FAILED_TRANSACTION
+#    def add_comment(self, post_id: str, comment: Comment):
+#        try:
+#            # Añade un comentario a un post en MongoDB
+#            result = self.posts.update_one(
+#                {"_id": ObjectId(post_id)},
+#                {"$push": {"Comentarios": comment.dict()}}
+#            )
+#            if result.modified_count > 0:
+#                return ResultCode.SUCCESS
+#            else:
+#                return ResultCode.FAILED_TRANSACTION
+#        except Exception as e:
+#            print(f"Error adding comment: {e}")
+#            return ResultCode.FAILED_TRANSACTION
