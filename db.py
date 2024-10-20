@@ -1,9 +1,12 @@
 import os
 import psycopg2
 import pymongo
+import pymongo.collection
+import pymongo.results
 import redis
+import models.Trips
 import models.user
-import models
+import models.posts
 from enum import Enum
 
 class ResultCode(Enum):
@@ -11,7 +14,8 @@ class ResultCode(Enum):
     FAILED_TRANSACTION = 1
     REPEATED_ELEMENT = 2
     USER_NOT_FOUND = 3
-
+    POST_NOT_FOUND = 4
+ 
 class PostgresDatabase:
     def __init__(self):
         self.connection = psycopg2.connect(
@@ -68,7 +72,77 @@ class PostgresDatabase:
 
 class MongoDatabase:
     def __init__(self):
-        self.connection = pymongo.MongoClient("mongodb://localhost:27017/")
+        self.connection = pymongo.MongoClient("mongodb://root:root@dbmongo:27017/")
+        self.db = self.connection["ViajesDB"]
+        self.posts = self.db["posts"]
+        self.destinos = self.db["destinos"]
+        self.bucketLists = self.db["bucketLists"]
+        self.trips = self.db["trips"]
+    
+    def create_post(self, post: models.posts.NewPost):
+        result: pymongo.results.InsertOneResult = self.posts.insert_one( dict(post) )
+        if result.acknowledged:
+            return [ResultCode.SUCCESS, result.inserted_id]
+        return ResultCode.FAILED_TRANSACTION
+    
+    def get_post(self, post: models.posts.GetPost):
+        return self.posts.find_one({"_id": post.PostID}) | ResultCode.POST_NOT_FOUND
+        
+    def like_post(self, post: models.posts.LikePost):
+        result: pymongo.results.UpdateResult = self.posts.update_one(
+            {"_id": post.PostID},
+            {"$inc": {"Likes": 1} }
+        )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+
+    def add_comment_post(self, postID: str, comment: models.posts.Comment):
+        result = self.posts.update_one(
+            {"_id": postID},
+            {"$push": {"Comentarios": dict(comment)} }
+        )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+
+    def create_destino(self, destino: models.Trips.NewDestination):
+        result: pymongo.results.InsertOneResult = self.destinos.insert_one( dict(destino) )
+        if result.acknowledged:
+            return [ResultCode.SUCCESS, result.inserted_id]
+        return ResultCode.FAILED_TRANSACTION
+
+    def add_comment_destino(self, destinoID: str, comment: models.Trips.Comment):
+        result = self.posts.update_one(
+            {"_id": destinoID},
+            {"$push": {"Comentarios": dict(comment)} }
+        )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+    
+    def add_like_destino(self, post: models.Trips.LikeDestination):
+        result: pymongo.results.UpdateResult = self.posts.update_one(
+            {"_id": post.PostID},
+            {"$inc": {"Likes": 1} }
+        )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+
+    def create_bucket_list(self, bucketList: models.Trips.BucketListCreation):
+        result: pymongo.results.InsertOneResult = self.bucketLists.insert_one( dict(bucketList) )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+
+    #! Falta lo de hacer que se puedan seguir bucket lists.
+
+    def create_trip(self, trip: models.Trips.CreateTrip):
+        result: pymongo.results.InsertOneResult = self.trips.insert_one( dict(trip) )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
 
 class RedisDatabase:
     def __init__(self):

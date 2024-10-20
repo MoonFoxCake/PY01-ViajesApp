@@ -32,18 +32,19 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./db/:/docker-entrypoint-initdb.d
 
-#  dbmongo:
-#    image: mongo
-#    restart: always
-#    ports:
-#      - 27017:27017
-#    networks:
-#      - default
-#    environment:
-#      MONGO_INITDB_ROOT_USERNAME: root
-#      MONGO_INITDB_ROOT_PASSWORD: root
-#    volumes:
-#      - mongodb-data:/data/db/
+  dbmongo:
+    image: mongo
+    command: mongod --bind_ip_all
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - default
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - mongodb-data:/data/db/
 
   redis:
     image: redis:latest
@@ -66,17 +67,17 @@ services:
     ports:
       - 5050:80
 
-#  mongoexpress:
-#    image: mongo-express
-#    restart: always
-#    ports:
-#      - 8081:8081
-#    networks:
-#      - default
-#    environment:
-#      ME_CONFIG_MONGODB_SERVER: dbmongo
-#      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-#      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+  mongoexpress:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    networks:
+      - default
+    environment:
+      ME_CONFIG_MONGODB_SERVER: dbmongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
 
 # ---------------------------------------------------
 

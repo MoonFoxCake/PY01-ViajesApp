@@ -5,15 +5,16 @@ class Comment(BaseModel):
     UserID: str
     Texto: str
 
+class LikeDestination(BaseModel):
+    PostID: str
 
 class NewDestination(BaseModel):
     AuthorID: str
     DestinationName: str
     Description: str
     Location: str
-    Likes: List[str] = []
+    Likes: List[str] = [] # No debería ser un integer?
     Comentarios: List[Comment] = []
-
 
 class BucketListCreation(BaseModel):
     AuthorID: str

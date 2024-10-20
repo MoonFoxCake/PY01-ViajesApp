@@ -9,6 +9,11 @@ class NewPost(BaseModel):
     AuthorID: int
     Texto: str
     MediaType: str
-    MediaURL: Optional[str] = None
-    Caption: Optional[str] = None
+    MediaURL: Optional[str] = ""
+    Caption: Optional[str] = ""
 
+class GetPost(BaseModel):
+    PostID: str
+
+class LikePost(BaseModel):
+    PostID: str

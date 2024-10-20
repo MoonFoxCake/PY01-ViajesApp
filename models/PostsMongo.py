@@ -1,7 +1,7 @@
 #from pydantic import BaseModel, Field
 #from typing import Optional, List
 from pymongo import MongoClient
-from models.NewPost import NewPost  # NewPost desde el archivo de modelos
+from models.posts import NewPost  # NewPost desde el archivo de modelos
 #from models.Comment import Comment  #  Comment
 from bson.objectid import ObjectId
 from db import ResultCode
