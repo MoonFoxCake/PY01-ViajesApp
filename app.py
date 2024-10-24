@@ -4,6 +4,8 @@ from models.posts import Comment, NewPost, LikePost
 from models.PostsMongo import NewPost
 from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip
 from models.user import NewUser, DelUser, EditUser
+from fastapi import FastAPI, Response, status
+from db import PostgresDatabase, MongoDatabase, ResultCode
 import uvicorn
 
 app: FastAPI = FastAPI()
@@ -49,6 +51,33 @@ async def edit_user(user: EditUser):
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+#Cambios Felipe
+@app.post("/login")
+async def login(user: NewUser, response: Response):
+    # Primero verifica si el usuario existe en PostgreSQL
+    result = postgresDB.authenticate_user(user.mail, user.password)
+    
+    if result == ResultCode.SUCCESS:
+        # Intenta obtener la sesión del usuario en Redis
+        session = redisDB.get_user_session(user.mail)
+
+        if session:
+            # Refresca la expiración si la sesión existe
+            redisDB.refresh_user_session(user.mail)
+            return {"message": "Sesión refrescada. Login se hizo exitosamente."}
+        else:
+            # Si no existe, crea una nueva sesión en Redis
+            redisDB.set_user_session(user.mail, {"name": user.name, "mail": user.mail, "role": user.role})
+            return {"message": "Login exitoso, se creó una nueva sesión."}
+    elif result == ResultCode.USER_NOT_FOUND:
+        return Response(status_code=status.HTTP_404_NOT_FOUND, content="User not found")
+    elif result == ResultCode.INVALID_PASSWORD:
+        return Response(status_code=status.HTTP_401_UNAUTHORIZED, content="Invalid password")
+    else:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="Login failed")
+
+#Cambios Felipe
 
 # -----------------------------------------------------------
 # Endpoints de MongoDB    
@@ -127,6 +156,20 @@ async def create_trip(trip: CreateTrip):
         return {"message": "Trip created successfully"}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+#Cambios Felipe
+@app.post("/followBucketList/{bucketlist_id}")
+async def follow_bucket_list(bucketlist_id: str, user: dict):
+    user_id = user['user_id']
+    result = mongoDB.seguir_bucket_list(user_id, bucketlist_id)
+    if result == ResultCode.SUCCESS:
+        return {"message": "User is now following the Bucket List successfully"}
+    elif result == ResultCode.USER_NOT_FOUND:
+        return Response(status_code=status.HTTP_404_NOT_FOUND, content="User not found")
+    else:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="Failed to follow the Bucket List")
+#Cambios Felipe
+
 # -----------------------------------------------------------
 
 if __name__ == "__main__":

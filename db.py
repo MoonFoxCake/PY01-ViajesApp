@@ -8,6 +8,8 @@ import models.Trips
 import models.user
 import models.posts
 from enum import Enum
+from bson.objectid import ObjectId
+
 
 class ResultCode(Enum):
     SUCCESS = 0
@@ -15,7 +17,9 @@ class ResultCode(Enum):
     REPEATED_ELEMENT = 2
     USER_NOT_FOUND = 3
     POST_NOT_FOUND = 4
- 
+    INVALID_PASSWORD = 5
+
+
 class PostgresDatabase:
     def __init__(self):
         self.connection = psycopg2.connect(
@@ -25,7 +29,32 @@ class PostgresDatabase:
             user=os.environ.get("DB_USER"),
             password=os.environ.get("DB_PASSWORD")
         )
-    
+
+    # Cambios Felipe
+    def authenticate_user(self, mail: str, password: str):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT password FROM Users WHERE mail = %s", (mail,))
+            stored_password = cursor.fetchone()
+
+            if stored_password is None:
+                print("Usuario no encontrado")
+                return ResultCode.USER_NOT_FOUND
+
+            print(f"Password en la base de datos: {stored_password[0]}")
+            print(f"Password ingresada: {password}")
+
+            if password == stored_password[0]:
+                print("Contraseña verificada correctamente")
+                return ResultCode.SUCCESS
+            else:
+                print("Contraseña incorrecta")
+                return ResultCode.INVALID_PASSWORD
+        except Exception as e:
+            print(f"Error during authentication: {e}")
+            return ResultCode.FAILED_TRANSACTION
+    # Cambios Felipe
+
     def register_user(self, user: models.user.NewUser):
         try:
             cursor = self.connection.cursor()
@@ -42,7 +71,7 @@ class PostgresDatabase:
         except psycopg2.errors.UniqueViolation:
             self.connection.rollback()
             return ResultCode.REPEATED_ELEMENT
-    
+
     def delete_user(self, user: models.user.DelUser):
         try:
             cursor = self.connection.cursor()
@@ -55,7 +84,7 @@ class PostgresDatabase:
         except psycopg2.errors.InFailedSqlTransaction:
             self.connection.rollback()
             return ResultCode.FAILED_TRANSACTION
-    
+
     def edit_user(self, user: models.user.EditUser):
         try:
             cursor = self.connection.cursor()
@@ -70,6 +99,7 @@ class PostgresDatabase:
             self.connection.rollback()
             return ResultCode.FAILED_TRANSACTION
 
+
 class MongoDatabase:
     def __init__(self):
         self.connection = pymongo.MongoClient("mongodb://root:root@dbmongo:27017/")
@@ -78,20 +108,20 @@ class MongoDatabase:
         self.destinos = self.db["destinos"]
         self.bucketLists = self.db["bucketLists"]
         self.trips = self.db["trips"]
-    
+
     def create_post(self, post: models.posts.NewPost):
-        result: pymongo.results.InsertOneResult = self.posts.insert_one( dict(post) )
+        result: pymongo.results.InsertOneResult = self.posts.insert_one(dict(post))
         if result.acknowledged:
             return [ResultCode.SUCCESS, result.inserted_id]
         return ResultCode.FAILED_TRANSACTION
-    
+
     def get_post(self, post: models.posts.GetPost):
-        return self.posts.find_one({"_id": post.PostID}) | ResultCode.POST_NOT_FOUND
-        
+        return self.posts.find_one({"_id": post.PostID}) or ResultCode.POST_NOT_FOUND
+
     def like_post(self, post: models.posts.LikePost):
         result: pymongo.results.UpdateResult = self.posts.update_one(
             {"_id": post.PostID},
-            {"$inc": {"Likes": 1} }
+            {"$inc": {"Likes": 1}}
         )
         if result.acknowledged:
             return ResultCode.SUCCESS
@@ -100,14 +130,14 @@ class MongoDatabase:
     def add_comment_post(self, postID: str, comment: models.posts.Comment):
         result = self.posts.update_one(
             {"_id": postID},
-            {"$push": {"Comentarios": dict(comment)} }
+            {"$push": {"Comentarios": dict(comment)}}
         )
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
 
     def create_destino(self, destino: models.Trips.NewDestination):
-        result: pymongo.results.InsertOneResult = self.destinos.insert_one( dict(destino) )
+        result: pymongo.results.InsertOneResult = self.destinos.insert_one(dict(destino))
         if result.acknowledged:
             return [ResultCode.SUCCESS, result.inserted_id]
         return ResultCode.FAILED_TRANSACTION
@@ -115,34 +145,70 @@ class MongoDatabase:
     def add_comment_destino(self, destinoID: str, comment: models.Trips.Comment):
         result = self.posts.update_one(
             {"_id": destinoID},
-            {"$push": {"Comentarios": dict(comment)} }
+            {"$push": {"Comentarios": dict(comment)}}
         )
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
-    
+
     def add_like_destino(self, post: models.Trips.LikeDestination):
         result: pymongo.results.UpdateResult = self.posts.update_one(
             {"_id": post.PostID},
-            {"$inc": {"Likes": 1} }
+            {"$inc": {"Likes": 1}}
         )
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
 
     def create_bucket_list(self, bucketList: models.Trips.BucketListCreation):
-        result: pymongo.results.InsertOneResult = self.bucketLists.insert_one( dict(bucketList) )
+        result: pymongo.results.InsertOneResult = self.bucketLists.insert_one(dict(bucketList))
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
+    
+    #Cambios Felipe
 
-    #! Falta lo de hacer que se puedan seguir bucket lists.
+    def seguir_bucket_list(self, user_id: int, bucketlist_id: str):
+        try:
+            # Verificar si el bucketlist_id es un ObjectId válido
+            if not ObjectId.is_valid(bucketlist_id):
+                print(f"El bucketlist_id {bucketlist_id} no es un ObjectId válido")
+                return ResultCode.FAILED_TRANSACTION
+
+            # Acceder a la colección "bucketLists" de MongoDB
+            collection = self.db["bucketLists"]
+
+            # Asegurarse de que la Bucket List existe
+            bucketlist = collection.find_one({"_id": ObjectId(bucketlist_id)})
+            if not bucketlist:
+                print(f"Bucket List con id {bucketlist_id} no encontrada")
+                return ResultCode.FAILED_TRANSACTION
+
+            # Añadir el user_id a la lista de followers, sin duplicados
+            resultado: pymongo.results.UpdateResult = collection.update_one(
+                {"_id": ObjectId(bucketlist_id)},
+                {"$addToSet": {"followers": user_id}}  # addToSet evita duplicados
+            )
+
+            if resultado.modified_count > 0:
+                print(f"Usuario {user_id} sigue la Bucket List {bucketlist_id} exitosamente")
+                return ResultCode.SUCCESS
+            else:
+                print(f"Error al seguir la Bucket List {bucketlist_id} por el usuario {user_id}")
+                return ResultCode.FAILED_TRANSACTION
+
+        except Exception as e:
+            print(f"Error siguiendo bucket list para el usuario {user_id} y la lista {bucketlist_id}: {e}")
+            return ResultCode.FAILED_TRANSACTION
+        
+        #Cambios Felipe
 
     def create_trip(self, trip: models.Trips.CreateTrip):
-        result: pymongo.results.InsertOneResult = self.trips.insert_one( dict(trip) )
+        result: pymongo.results.InsertOneResult = self.trips.insert_one(dict(trip))
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
+
 
 class RedisDatabase:
     def __init__(self):
@@ -153,12 +219,35 @@ class RedisDatabase:
             decode_responses=True
         )
         self.connection.ping()
-    
+
     def set_hash_data(self, key, value):
         self.connection.hset(key, mapping=dict(value))
         self.connection.expire(key, 100)
         return ResultCode.SUCCESS
-    
+
     def delete_hash_data(self, key, llaves):
         self.connection.hdel(key, *llaves)
         return ResultCode.SUCCESS
+
+    def set_user_session(self, mail, user_data):
+        try:
+            self.connection.hset(mail, mapping=user_data)
+            self.connection.expire(mail, 100)  # Sesión temporal de 100 segundos
+            return ResultCode.SUCCESS
+        except Exception as e:
+            print(f"Error setting user session in Redis: {e}")
+            return ResultCode.FAILED_TRANSACTION
+
+    def get_user_session(self, mail):
+        try:
+            return self.connection.hgetall(mail)
+        except Exception as e:
+            print(f"Error getting user session in Redis: {e}")
+            return None
+
+    def refresh_user_session(self, mail):
+        try:
+            self.connection.expire(mail, 100)
+        except Exception as e:
+            print(f"Error refreshing session in Redis: {e}")
+
