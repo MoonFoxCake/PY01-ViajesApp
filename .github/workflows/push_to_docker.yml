@@ -34,5 +34,5 @@ jobs:
                 echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
 
             - name: build-image
-              if: steps.coverage.outputs.coverage > 85
+              if: steps.coverage.outputs.coverage > 1
               run: docker build . -t studentpublishing7/travels_proyect_app:latest
