@@ -107,6 +107,7 @@ class MongoDatabase:
         self.posts = self.db["posts"]
         self.destinos = self.db["destinos"]
         self.bucketLists = self.db["bucketLists"]
+        self.bucketListsFollow = self.db["bucketListsFollow"]
         self.trips = self.db["trips"]
 
     def create_post(self, post: models.posts.NewPost):
@@ -121,7 +122,7 @@ class MongoDatabase:
     def like_post(self, post: models.posts.LikePost):
         result: pymongo.results.UpdateResult = self.posts.update_one(
             {"_id": post.PostID},
-            {"$inc": {"Likes": 1}}
+            {"$push": {"Likes": post.LikeAuthorID}}
         )
         if result.acknowledged:
             return ResultCode.SUCCESS
@@ -171,6 +172,16 @@ class MongoDatabase:
 
     def create_bucket_list(self, bucketList: models.Trips.BucketListCreation):
         result: pymongo.results.InsertOneResult = self.bucketLists.insert_one(dict(bucketList))
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+    
+    def follow_bucket_list(self, bucket_list: models.Trips.BucketListFollower):
+        result: pymongo.results.UpdateResult = self.posts.update_one(
+            {"_id": bucket_list.FollowerUserID},
+            {"$push": {"bucketListsFollowing": bucket_list.BucketListID}},
+            upsert=True
+        )
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION

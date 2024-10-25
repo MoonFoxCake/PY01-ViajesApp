@@ -14,7 +14,7 @@ class NewDestination(BaseModel):
     DestinationName: str
     Description: str
     Location: str
-    Likes: List[str] = [] # No debería ser un integer?
+    Likes: List[str] = []
     Comentarios: List[Comment] = []
 
 class BucketListCreation(BaseModel):
@@ -22,6 +22,10 @@ class BucketListCreation(BaseModel):
     Destinos : List[str] = []
     Likes: List[str] = []
     Comentarios: List[Comment] = []
+
+class BucketListFollower(BaseModel):
+    BucketListID: str
+    FollowerUserID: str
 
 class CreateTrip(BaseModel):
     Participants: List[str] = []

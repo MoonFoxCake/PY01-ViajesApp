@@ -2,7 +2,7 @@ from fastapi import FastAPI, status, Response
 import pymongo
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
 from models.posts import Comment, NewPost, LikePost
-from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip
+from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip, BucketListFollower
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
 from db import PostgresDatabase, MongoDatabase, ResultCode
@@ -154,6 +154,14 @@ async def create_bucket_list(bucket_list: BucketListCreation):
     result = mongoDB.create_bucket_list(bucket_list)
     if result == ResultCode.SUCCESS:
         return {"message": "Bucket list created successfully"}
+    else:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@app.post("/followBucketList")
+async def follow_bucket_list(bucket_list: BucketListFollower):
+    result = mongoDB.follow_bucket_list(bucket_list)
+    if result == ResultCode.SUCCESS:
+        return {"message": "Bucket list followed successfully"}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
