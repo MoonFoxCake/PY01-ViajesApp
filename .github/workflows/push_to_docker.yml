@@ -17,7 +17,7 @@ jobs:
                 python-version: '3.12'
 
             - name: Setup Compose
-              run: docker-compose up -d --build
+              run: docker compose up -d --build
 
             - name: Run tests
               run: |
