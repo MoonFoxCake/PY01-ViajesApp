@@ -33,6 +33,16 @@ jobs:
                 COVERAGE=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('coverage.xml').getroot().attrib['line-rate'])")
                 echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
 
+            - name: Verify coverage
+              if: steps.coverage.outputs.coverage < 0.85
+              run: exit 1
+
             - name: build-image
               if: steps.coverage.outputs.coverage >= 0.85
               run: docker build . -t studentpublishing7/travels_proyect_app:latest
+
+            - name: Push Image to Docker Hub
+              if: steps.coverage.outputs.coverage >= 0.85
+              run: |
+                docker login -u studentpublishing7 -p ${{ secrets.DOCKER_HUB_TOKEN }}
+                docker push studentpublishing7/travels_proyect_app:latest
