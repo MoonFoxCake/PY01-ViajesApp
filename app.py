@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status, Response
 import pymongo
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
-from models.posts import  Comment, NewPost, LikePost, PostComment
+from models.posts import  Comment, NewPost, LikePost, PostComment, GetPost
 from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip, BucketListFollower
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
@@ -108,9 +108,11 @@ async def create_post(post: NewPost):
 
 @app.get("/post/{post_id}")
 async def get_post(post_id: str):
-    result = mongoDB.get_post(post_id)
+    result = mongoDB.get_post(GetPost(PostID=post_id))
     if result:
-        return result
+        resultDict = dict(result)
+        resultDict.pop("_id")
+        return resultDict
     else:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
