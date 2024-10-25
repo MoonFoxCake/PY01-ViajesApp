@@ -1,0 +1,19 @@
+name: Build And Publish Image to Docker
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+    publish_image:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+            - name: build-image
+              run: docker build -t studentpublishing7/travels_proyect_app:latest
+            - name: Push Image to Docker Hub
+              run: |
+                docker push studentpublishing7/travels_proyect_app:latest
+                
+            
