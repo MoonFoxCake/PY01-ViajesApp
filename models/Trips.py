@@ -4,6 +4,7 @@ from typing import Optional, List
 class Comment(BaseModel):
     UserID: str
     Texto: str
+    Likes: List[str] = []
 
 class LikeDestination(BaseModel):
     PostID: str
