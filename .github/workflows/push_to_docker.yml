@@ -11,7 +11,7 @@ jobs:
             - name: Checkout Repository
               uses: actions/checkout@v4
             - name: build-image
-              run: docker build -t studentpublishing7/travels_proyect_app:latest
+              run: docker build . -t studentpublishing7/travels_proyect_app:latest
             - name: Push Image to Docker Hub
               run: |
                 docker login -u studentpublishing7 -p {{ secrets.DOCKER_HUB_TOKEN }}
