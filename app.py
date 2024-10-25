@@ -1,7 +1,6 @@
 from fastapi import FastAPI, status, Response
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
 from models.posts import Comment, NewPost, LikePost
-from models.PostsMongo import NewPost
 from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
@@ -54,7 +53,7 @@ async def edit_user(user: EditUser):
     
 #Cambios Felipe
 @app.post("/login")
-async def login(user: NewUser, response: Response):
+async def login(user: NewUser):
     # Primero verifica si el usuario existe en PostgreSQL
     result = postgresDB.authenticate_user(user.mail, user.password)
     
@@ -88,7 +87,8 @@ async def create_post(post: NewPost):
     objID = str(result[1])
     if result[0] == ResultCode.SUCCESS:
         redisDB.set_hash_data(objID, post)
-        return {"message": "Post created successfully"}
+        return {"message": "Post created successfully",
+                "id": result[1]}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -120,7 +120,6 @@ async def add_comment(post_id: str, comment: Comment):
 async def create_destino(destination: NewDestination):
     result = mongoDB.create_destino(destination)
     if result[0] == ResultCode.SUCCESS:
-        redisDB.set_hash_data(str(result[1]), destination)
         return {"message": "Destination created successfully"}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

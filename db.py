@@ -84,6 +84,9 @@ class PostgresDatabase:
         except psycopg2.errors.InFailedSqlTransaction:
             self.connection.rollback()
             return ResultCode.FAILED_TRANSACTION
+        except psycopg2.errors.lookup("02000"):
+            self.connection.rollback()
+            return ResultCode.USER_NOT_FOUND
 
     def edit_user(self, user: models.user.EditUser):
         try:
@@ -98,7 +101,9 @@ class PostgresDatabase:
         except psycopg2.errors.InFailedSqlTransaction:
             self.connection.rollback()
             return ResultCode.FAILED_TRANSACTION
-
+        except psycopg2.errors.lookup("02000"):
+            self.connection.rollback()
+            return ResultCode.USER_NOT_FOUND
 
 class MongoDatabase:
     def __init__(self):
@@ -116,7 +121,7 @@ class MongoDatabase:
         return ResultCode.FAILED_TRANSACTION
 
     def get_post(self, post: models.posts.GetPost):
-        return self.posts.find_one({"_id": post.PostID}) or ResultCode.POST_NOT_FOUND
+        return self.posts.find_one({"_id": ObjectId(post.PostID)}) or ResultCode.POST_NOT_FOUND
 
     def like_post(self, post: models.posts.LikePost):
         result: pymongo.results.UpdateResult = self.posts.update_one(

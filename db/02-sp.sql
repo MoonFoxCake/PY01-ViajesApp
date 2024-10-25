@@ -40,20 +40,34 @@ BEGIN
     FROM Users
     WHERE Mail = p_Mail;
 
+    IF NOT FOUND THEN
+        RAISE SQLSTATE '02000';
+    END IF;
+
     UPDATE Users
     SET Name = COALESCE(p_Name, Users.Name),
         Mail = COALESCE(p_NewMail, Users.Mail),
         Password = COALESCE(p_Password, Users.Password),
         Role = COALESCE(p_Role, Users.Role)
-    WHERE UserID = oldMail;
+    WHERE Mail = oldMail;
 END;
 $$;
 
 CREATE OR REPLACE PROCEDURE DeleteUser(inUserMail VARCHAR)
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    foundMail VARCHAR;
 BEGIN
-    DELETE FROM Users WHERE mail = inUserMail;
+    SELECT Mail INTO foundMail
+    FROM Users
+    WHERE mail = inUserMail;
+
+    IF NOT FOUND THEN
+        RAISE SQLSTATE '02000';
+    END IF;
+
+    DELETE FROM Users WHERE mail = foundMail;
 END;
 $$;
 
