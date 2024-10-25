@@ -99,35 +99,35 @@ async def test_login_user_notfound():
 
 @pytest.mark.asyncio
 async def test_fetch_post():
-    testPost = models.posts.GetPost(
-        PostID=str(pytest.objectId)
-    )
-    res = await get_post(testPost)
+    res = await get_post(str(pytest.objectId))
     assert res == {
-        "_id":pytest.objectId,
         "AuthorID":1, 
         "Texto":"Post de prueba.", 
         "MediaType":"text",
         "MediaURL":"",
-        "Caption":""
+        "Caption":"",
+        "Likes":[],
+        "Comentarios":[]
     }
 
 @pytest.mark.asyncio
 async def test_like_post():
     testPost = models.posts.LikePost(
-        PostID=str(pytest.objectId)
+        PostID=str(pytest.objectId),
+        LikeAuthorID="1"
     )
     res = await like_post(testPost)
     assert res == {"message": "Post liked successfully"}
 
 @pytest.mark.asyncio
 async def test_comment_post():
-    testComment = models.posts.Comment(
+    testComment = models.posts.PostComment(
+        PostID=str(pytest.objectId),
         UserID="1",
         Texto="Prueba fea."
     )
-    res = await add_comment(str(pytest.objectId), testComment)
-    assert res == {"message": "Comment added successfully"}
+    res = await add_comment(testComment)
+    assert res["message"] == "Comment added successfully and stored temporarily in Redis"
 
 @pytest.mark.asyncio
 async def test_create_destino():
