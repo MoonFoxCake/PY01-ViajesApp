@@ -14,6 +14,7 @@ jobs:
               run: docker build -t studentpublishing7/travels_proyect_app:latest
             - name: Push Image to Docker Hub
               run: |
+                docker login -u studentpublishing7 -p {{ secrets.DOCKER_HUB_TOKEN }}
                 docker push studentpublishing7/travels_proyect_app:latest
                 
             
