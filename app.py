@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status, Response
 import pymongo
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
-from models.posts import  Comment, NewPost, LikePost, PostComment, GetPost
+from models.posts import  Comment, LikeComment, NewPost, LikePost, PostComment, GetPost
 from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip, BucketListFollower
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
@@ -184,8 +184,9 @@ async def add_comment_destino(destino_id: str, comment: Comment):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @app.post("/likeComment")
-async def like_comment(post_id: str, comment_id: str, user_id: str):
-    result = mongoDB.like_comment(post_id, comment_id, user_id)
+async def like_comment(data: LikeComment):
+    # Llama a la función de MongoDB con los valores del cuerpo de la solicitud
+    result = mongoDB.like_comment(data.post_id, data.comment_id, data.user_id)
     if result == ResultCode.SUCCESS:
         return {"message": "Comment liked successfully"}
     else:

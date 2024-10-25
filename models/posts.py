@@ -29,3 +29,7 @@ class LikePost(BaseModel):
     PostID: str
     LikeAuthorID: str
     
+class LikeComment(BaseModel):
+    post_id: str
+    comment_id: str
+    user_id: str
