@@ -132,6 +132,14 @@ async def add_comment_destino(destino_id: str, comment: Comment):
         return {"message": "Comment added successfully"}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@app.post("/likeComment")
+async def like_comment(post_id: str, comment_id: str, user_id: str):
+    result = mongoDB.like_comment(post_id, comment_id, user_id)
+    if result == ResultCode.SUCCESS:
+        return {"message": "Comment liked successfully"}
+    else:
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @app.post("/likeDestino")
 async def like_destino(destination: LikeDestination):
