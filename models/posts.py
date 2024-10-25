@@ -5,6 +5,8 @@ from bson.objectid import ObjectId
 class Comment(BaseModel):
     UserID: str
     Texto: str
+    Likes: List[str] = []
+
 
 class NewPost(BaseModel):
     AuthorID: int
