@@ -1,19 +1,24 @@
-name: Build And Publish Image to Docker
+name: Coverage Testing, Build And Publish Image to Docker
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-    publish_image:
+    cov_and_publish:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
               uses: actions/checkout@v4
-            - name: build-image
-              run: docker build . -t studentpublishing7/travels_proyect_app:latest
-            - name: Push Image to Docker Hub
+
+            - name: Setup Python
+              uses: actions/setup-python@v2
+              with:
+                python-version: '3.12'
+
+            - name: Setup Compose
+              run: docker-compose up -d --build
+
+            - name: Run tests
               run: |
-                docker login -u studentpublishing7 -p ${{ secrets.DOCKER_HUB_TOKEN }}
-                docker push studentpublishing7/travels_proyect_app:latest
-                
+                docker exec -it py01-viajesapp-webapp-1 poetry run coverage run -m pytest tests/testdb.py && poetry run coverage xml
