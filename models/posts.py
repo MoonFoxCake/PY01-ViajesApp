@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from bson.objectid import ObjectId
 
 class Comment(BaseModel):
