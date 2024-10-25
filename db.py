@@ -8,8 +8,7 @@ import models.Trips
 import models.user
 import models.posts
 from enum import Enum
-from bson.objectid import ObjectId
-
+from bson import ObjectId
 
 class ResultCode(Enum):
     SUCCESS = 0
@@ -18,7 +17,6 @@ class ResultCode(Enum):
     USER_NOT_FOUND = 3
     POST_NOT_FOUND = 4
     INVALID_PASSWORD = 5
-
 
 class PostgresDatabase:
     def __init__(self):
@@ -30,7 +28,6 @@ class PostgresDatabase:
             password=os.environ.get("DB_PASSWORD")
         )
 
-    # Cambios Felipe
     def authenticate_user(self, mail: str, password: str):
         try:
             cursor = self.connection.cursor()
@@ -53,7 +50,6 @@ class PostgresDatabase:
         except Exception as e:
             print(f"Error during authentication: {e}")
             return ResultCode.FAILED_TRANSACTION
-    # Cambios Felipe
 
     def register_user(self, user: models.user.NewUser):
         try:
@@ -104,7 +100,6 @@ class PostgresDatabase:
         except psycopg2.errors.lookup("02000"):
             self.connection.rollback()
             return ResultCode.USER_NOT_FOUND
-
 class MongoDatabase:
     def __init__(self):
         self.connection = pymongo.MongoClient("mongodb://root:root@dbmongo:27017/")
@@ -170,51 +165,13 @@ class MongoDatabase:
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
-    
-    #Cambios Felipe
-
-    def seguir_bucket_list(self, user_id: int, bucketlist_id: str):
-        try:
-            # Verificar si el bucketlist_id es un ObjectId válido
-            if not ObjectId.is_valid(bucketlist_id):
-                print(f"El bucketlist_id {bucketlist_id} no es un ObjectId válido")
-                return ResultCode.FAILED_TRANSACTION
-
-            # Acceder a la colección "bucketLists" de MongoDB
-            collection = self.db["bucketLists"]
-
-            # Asegurarse de que la Bucket List existe
-            bucketlist = collection.find_one({"_id": ObjectId(bucketlist_id)})
-            if not bucketlist:
-                print(f"Bucket List con id {bucketlist_id} no encontrada")
-                return ResultCode.FAILED_TRANSACTION
-
-            # Añadir el user_id a la lista de followers, sin duplicados
-            resultado: pymongo.results.UpdateResult = collection.update_one(
-                {"_id": ObjectId(bucketlist_id)},
-                {"$addToSet": {"followers": user_id}}  # addToSet evita duplicados
-            )
-
-            if resultado.modified_count > 0:
-                print(f"Usuario {user_id} sigue la Bucket List {bucketlist_id} exitosamente")
-                return ResultCode.SUCCESS
-            else:
-                print(f"Error al seguir la Bucket List {bucketlist_id} por el usuario {user_id}")
-                return ResultCode.FAILED_TRANSACTION
-
-        except Exception as e:
-            print(f"Error siguiendo bucket list para el usuario {user_id} y la lista {bucketlist_id}: {e}")
-            return ResultCode.FAILED_TRANSACTION
-        
-        #Cambios Felipe
 
     def create_trip(self, trip: models.Trips.CreateTrip):
         result: pymongo.results.InsertOneResult = self.trips.insert_one(dict(trip))
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
-
-
+    
 class RedisDatabase:
     def __init__(self):
         self.connection = redis.Redis(
@@ -255,4 +212,3 @@ class RedisDatabase:
             self.connection.expire(mail, 100)
         except Exception as e:
             print(f"Error refreshing session in Redis: {e}")
-
