@@ -1,8 +1,9 @@
 from fastapi import FastAPI, status, Response
+import pymongo
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
 from models.posts import Comment, NewPost, LikePost
 from models.PostsMongo import NewPost
-from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip
+from models.Trips import FollowRequest, NewDestination, LikeDestination, BucketListCreation, CreateTrip
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
 from db import PostgresDatabase, MongoDatabase, ResultCode
@@ -157,19 +158,13 @@ async def create_trip(trip: CreateTrip):
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-#Cambios Felipe
-@app.post("/followBucketList/{bucketlist_id}")
-async def follow_bucket_list(bucketlist_id: str, user: dict):
-    user_id = user['user_id']
-    result = mongoDB.seguir_bucket_list(user_id, bucketlist_id)
+@app.post("/followBucketList")
+async def follow_bucket_list(bucket_list_id: str, user_id: str):
+    result = mongoDB.follow_bucket_list(bucket_list_id, user_id)
     if result == ResultCode.SUCCESS:
-        return {"message": "User is now following the Bucket List successfully"}
-    elif result == ResultCode.USER_NOT_FOUND:
-        return Response(status_code=status.HTTP_404_NOT_FOUND, content="User not found")
+        return {"message": "Successfully followed the bucket list"}
     else:
-        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="Failed to follow the Bucket List")
-#Cambios Felipe
-
+        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 # -----------------------------------------------------------
 
 if __name__ == "__main__":
