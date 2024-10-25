@@ -7,6 +7,7 @@ from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
 from db import PostgresDatabase, MongoDatabase, ResultCode
 import uvicorn
+import json
 
 app: FastAPI = FastAPI()
 postgresDB: PostgresDatabase = PostgresDatabase()
@@ -87,9 +88,19 @@ async def create_post(post: NewPost):
     result = mongoDB.create_post(post)
     objID = str(result[1])
     if result[0] == ResultCode.SUCCESS:
-        redisDB.set_hash_data(objID, post)
+
+        redisData = {
+            "AuthorID": post.AuthorID,
+            "Texto": post.Texto,
+            "MediaType": post.MediaType,
+            "MediaURL": post.MediaURL,
+            "Caption": post.Caption,
+            "Likes": json.dumps(post.Likes)
+        }
+
+        redisDB.set_hash_data(objID, redisData)
         return {"message": "Post created successfully",
-                "id": result[1]}
+                "id": objID}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
