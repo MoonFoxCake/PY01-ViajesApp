@@ -23,6 +23,10 @@ jobs:
               run: |
                 docker exec -t py01-viajesapp-webapp-1 /bin/bash -c "poetry run coverage run -m pytest tests/testdb.py && poetry run coverage xml"
 
+            - name: Copy XML
+              run: |
+                docker cp py01-viajesapp-webapp-1:app/coverage.xml ./
+
             - name: Parse coverage
               id: coverage
               run: |
