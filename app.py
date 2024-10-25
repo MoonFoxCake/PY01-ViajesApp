@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status, Response
 import pymongo
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
-from models.posts import  Comment, NewPost, LikePost
+from models.posts import  Comment, NewPost, LikePost, PostComment
 from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip, BucketListFollower
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
@@ -121,22 +121,23 @@ async def like_post(post: LikePost):
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @app.post("/commentPost")
-async def add_comment(post_id: str, comment: Comment):
-    result = mongoDB.add_comment_post(post_id, comment)
+async def add_comment(commentDict: PostComment):
+    post_id = dict(commentDict).pop('PostID')
+    result = mongoDB.add_comment_post(post_id, commentDict)
     if result == ResultCode.SUCCESS:
         #return {"message": "Comment added successfully"}
         redis_key = f"post:{post_id}:comments"
         
         # Convertir el comentario a un formato adecuado
         comment_data = {
-            "_id": str(comment._id),  # Si estás usando ObjectId, conviértelo a string
-            "UserID": comment.UserID,
-            "Texto": comment.Texto,
-            "Likes": json.dumps(comment.Likes)  # Almacenar los likes como string 
+            "_id": str(commentDict._id),  # Si estás usando ObjectId, conviértelo a string
+            "UserID": commentDict.UserID,
+            "Texto": commentDict.Texto,
+            "Likes": json.dumps(commentDict.Likes)  # Almacenar los likes como string 
         }
 
         # Almacenar el comentario en Redis con una expiración temporal 
-        redisDB.set_hash_data(redis_key, {str(comment._id): comment_data})
+        redisDB.set_hash_data(redis_key, {str(commentDict._id): comment_data})
         redisDB.connection.expire(redis_key, 300)  # Expiración de 5 minutos (300 segundos)
         
         return {"message": "Comment added successfully and stored temporarily in Redis"}

@@ -7,6 +7,12 @@ class Comment(BaseModel):
     Texto: str
     Likes: List[str] = []
 
+class PostComment(BaseModel):
+    PostID: str
+    UserID: str
+    Texto: str
+    Likes: List[str] = []
+
 class NewPost(BaseModel):
     AuthorID: int
     Texto: str
