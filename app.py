@@ -157,14 +157,6 @@ async def create_trip(trip: CreateTrip):
         return {"message": "Trip created successfully"}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-@app.post("/followBucketList")
-async def follow_bucket_list(bucket_list_id: str, user_id: str):
-    result = mongoDB.follow_bucket_list(bucket_list_id, user_id)
-    if result == ResultCode.SUCCESS:
-        return {"message": "Successfully followed the bucket list"}
-    else:
-        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 # -----------------------------------------------------------
 
 if __name__ == "__main__":

@@ -166,16 +166,7 @@ class MongoDatabase:
         if result.acknowledged:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
-
-    def follow_bucket_list(self, bucket_list_id: str, user_id: str):
-        result: pymongo.results.UpdateResult = self.bucketLists.update_one(
-            {"_id": ObjectId(bucket_list_id)},
-            {"$addToSet": {"Seguidores": user_id}}  # Agregar el usuario a la lista de seguidores
-        )
-        if result.modified_count > 0:
-            return ResultCode.SUCCESS
-        return ResultCode.FAILED_TRANSACTION
-
+    
 class RedisDatabase:
     def __init__(self):
         self.connection = redis.Redis(

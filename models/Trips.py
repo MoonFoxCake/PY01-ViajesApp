@@ -21,7 +21,6 @@ class BucketListCreation(BaseModel):
     Destinos : List[str] = []
     Likes: List[str] = []
     Comentarios: List[Comment] = []
-    Seguidores: List[str] = []  # Nueva lista de seguidores
 
 class CreateTrip(BaseModel):
     Participants: List[str] = []
