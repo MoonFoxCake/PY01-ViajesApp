@@ -22,3 +22,13 @@ jobs:
             - name: Run tests
               run: |
                 docker exec -t py01-viajesapp-webapp-1 /bin/bash -c "poetry run coverage run -m pytest tests/testdb.py && poetry run coverage xml"
+
+            - name: Parse coverage
+              id: coverage
+              run: |
+                COVERAGE=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('coverage.xml').getroot().attrib['line-rate'])")
+                echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+
+            - name: build-image
+              if: steps.coverage.outputs.coverage > 85
+              run: docker build . -t studentpublishing7/travels_proyect_app:latest
