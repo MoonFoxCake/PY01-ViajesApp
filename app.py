@@ -3,7 +3,7 @@ import pymongo
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
 from models.posts import Comment, NewPost, LikePost
 from models.PostsMongo import NewPost
-from models.Trips import FollowRequest, NewDestination, LikeDestination, BucketListCreation, CreateTrip
+from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
 from db import PostgresDatabase, MongoDatabase, ResultCode
