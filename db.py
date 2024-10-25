@@ -192,6 +192,15 @@ class MongoDatabase:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
     
+    def like_comment(self, postID: str, commentID: str, userID: str):
+        result = self.posts.update_one(
+            {"_id": ObjectId(postID), "Comentarios._id": ObjectId(commentID)},
+            {"$addToSet": {"Comentarios.$.Likes": userID}}
+        )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+    
 class RedisDatabase:
     def __init__(self):
         self.connection = redis.Redis(

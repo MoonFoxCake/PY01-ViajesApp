@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status, Response
 import pymongo
 from db import PostgresDatabase, MongoDatabase, RedisDatabase, ResultCode
-from models.posts import Comment, NewPost, LikePost
+from models.posts import  Comment, NewPost, LikePost
 from models.Trips import NewDestination, LikeDestination, BucketListCreation, CreateTrip, BucketListFollower
 from models.user import NewUser, DelUser, EditUser
 from fastapi import FastAPI, Response, status
@@ -124,7 +124,22 @@ async def like_post(post: LikePost):
 async def add_comment(post_id: str, comment: Comment):
     result = mongoDB.add_comment_post(post_id, comment)
     if result == ResultCode.SUCCESS:
-        return {"message": "Comment added successfully"}
+        #return {"message": "Comment added successfully"}
+        redis_key = f"post:{post_id}:comments"
+        
+        # Convertir el comentario a un formato adecuado
+        comment_data = {
+            "_id": str(comment._id),  # Si estás usando ObjectId, conviértelo a string
+            "UserID": comment.UserID,
+            "Texto": comment.Texto,
+            "Likes": json.dumps(comment.Likes)  # Almacenar los likes como string 
+        }
+
+        # Almacenar el comentario en Redis con una expiración temporal 
+        redisDB.set_hash_data(redis_key, {str(comment._id): comment_data})
+        redisDB.connection.expire(redis_key, 300)  # Expiración de 5 minutos (300 segundos)
+        
+        return {"message": "Comment added successfully and stored temporarily in Redis"}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -184,6 +199,6 @@ async def create_trip(trip: CreateTrip):
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 # -----------------------------------------------------------
-
+    
 if __name__ == "__main__":
     uvicorn.run(app, port=8000, host="0.0.0.0")

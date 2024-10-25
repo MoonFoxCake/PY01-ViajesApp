@@ -22,3 +22,4 @@ class GetPost(BaseModel):
 class LikePost(BaseModel):
     PostID: str
     LikeAuthorID: str
+    
