@@ -8,6 +8,8 @@ from fastapi import FastAPI, Response, status
 from db import PostgresDatabase, MongoDatabase, ResultCode
 import uvicorn
 import json
+from bson import ObjectId
+
 
 app: FastAPI = FastAPI()
 postgresDB: PostgresDatabase = PostgresDatabase()
@@ -122,27 +124,46 @@ async def like_post(post: LikePost):
 
 @app.post("/commentPost")
 async def add_comment(commentDict: PostComment):
-    post_id = dict(commentDict).pop('PostID')
-    result = mongoDB.add_comment_post(post_id, commentDict)
-    if result == ResultCode.SUCCESS:
-        #return {"message": "Comment added successfully"}
-        redis_key = f"post:{post_id}:comments"
-        
-        # Convertir el comentario a un formato adecuado
-        comment_data = {
-            "_id": str(commentDict._id),  # Si estás usando ObjectId, conviértelo a string
+    post_id = commentDict.PostID
+
+    # Crear el comentario en MongoDB
+    comment_data = {
+        "_id": ObjectId(),
+        "UserID": commentDict.UserID,
+        "Texto": commentDict.Texto,
+        "Likes": commentDict.Likes
+    }
+
+    # Añadir el comentario a MongoDB
+    result = mongoDB.posts.update_one(
+        {"_id": ObjectId(post_id)},
+        {"$push": {"Comentarios": comment_data}}
+    )
+
+    # Si se añade el comentario correctamente
+    if result.acknowledged:
+        # Obtener el ID del comentario (de MongoDB o generar uno único)
+        comment_data_for_redis = {
+            "_id": str(comment_data["_id"]),  # Convertir ObjectId a string
             "UserID": commentDict.UserID,
             "Texto": commentDict.Texto,
-            "Likes": json.dumps(commentDict.Likes)  # Almacenar los likes como string 
+            "Likes": json.dumps(commentDict.Likes)
         }
+        # Configurar la clave para Redis
+        redis_key = f"post:{post_id}:comments"
 
-        # Almacenar el comentario en Redis con una expiración temporal 
-        redisDB.set_hash_data(redis_key, {str(commentDict._id): comment_data})
-        redisDB.connection.expire(redis_key, 300)  # Expiración de 5 minutos (300 segundos)
+
+        redisDB.set_hash_data(redis_key, {str(comment_data["_id"]): json.dumps(comment_data_for_redis)})
+        redisDB.connection.expire(redis_key, 300)  # Expiración de 5 minutos
+
+        return {
+            "message": "Comment added successfully and stored temporarily in Redis",
+            "comment_id": str(comment_data["_id"])  # Devuelve el ID del comentario
+        }
         
-        return {"message": "Comment added successfully and stored temporarily in Redis"}
-    else:
-        return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # Si falla la operación en MongoDB
+    return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @app.post("/createDestino")
 async def create_destino(destination: NewDestination):

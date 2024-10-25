@@ -10,6 +10,7 @@ import models.posts
 from enum import Enum
 from bson import ObjectId
 
+
 class ResultCode(Enum):
     SUCCESS = 0
     FAILED_TRANSACTION = 1
@@ -132,6 +133,15 @@ class MongoDatabase:
         result = self.posts.update_one(
             {"_id": postID},
             {"$push": {"Comentarios": dict(comment)}}
+        )
+        if result.acknowledged:
+            return ResultCode.SUCCESS
+        return ResultCode.FAILED_TRANSACTION
+
+    def add_like_destino(self, post: models.Trips.LikeDestination):
+        result: pymongo.results.UpdateResult = self.posts.update_one(
+            {"_id": post.PostID},
+            {"$inc": {"Likes": 1}}
         )
         if result.acknowledged:
             return ResultCode.SUCCESS
