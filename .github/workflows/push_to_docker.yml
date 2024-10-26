@@ -21,4 +21,28 @@ jobs:
 
             - name: Run tests
               run: |
-                docker exec -t py01-viajesapp-webapp-1 poetry run coverage run -m pytest tests/testdb.py && poetry run coverage xml
+                docker exec -t py01-viajesapp-webapp-1 /bin/bash -c "poetry run coverage run -m pytest tests/testdb.py && poetry run coverage xml"
+
+            - name: Copy XML
+              run: |
+                docker cp py01-viajesapp-webapp-1:app/coverage.xml ./
+
+            - name: Parse coverage
+              id: coverage
+              run: |
+                COVERAGE=$(python -c "import xml.etree.ElementTree as ET; print(ET.parse('coverage.xml').getroot().attrib['line-rate'])")
+                echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+
+            - name: Verify coverage
+              if: steps.coverage.outputs.coverage < 0.85
+              run: exit 1
+
+            - name: build-image
+              if: steps.coverage.outputs.coverage >= 0.85
+              run: docker build . -t studentpublishing7/travels_proyect_app:latest
+
+            - name: Push Image to Docker Hub
+              if: steps.coverage.outputs.coverage >= 0.85
+              run: |
+                docker login -u studentpublishing7 -p ${{ secrets.DOCKER_HUB_TOKEN }}
+                docker push studentpublishing7/travels_proyect_app:latest
