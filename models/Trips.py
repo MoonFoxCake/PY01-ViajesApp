@@ -14,13 +14,13 @@ class NewDestination(BaseModel):
     DestinationName: str
     Description: str
     Location: str
-    Likes: int
+    Likes: int = 0
     Comentarios: List[Comment] = []
 
 class BucketListCreation(BaseModel):
     AuthorID: str
     Destinos : List[str] = []
-    Likes: int
+    Likes: int = 0
     Comentarios: List[Comment] = []
 
 class BucketListFollower(BaseModel):
