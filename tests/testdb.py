@@ -138,7 +138,7 @@ async def test_create_destino():
         Location="Cartago"
     )
     res = await create_destino(testDestination)
-    assert res == {"message": "Destination created successfully"}
+    assert res["message"] == "Destination created successfully"
 
 @pytest.mark.asyncio
 async def test_comment_destination():
@@ -164,7 +164,7 @@ async def test_create_bucket_list():
        Destinos=["1"]
     )
     res = await create_bucket_list(testComment)
-    assert res == {"message": "Bucket list created successfully"}
+    assert res["message"] == "Bucket list created successfully"
 
 @pytest.mark.asyncio
 async def test_create_trip():

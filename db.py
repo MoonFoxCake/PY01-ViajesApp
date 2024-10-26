@@ -147,15 +147,6 @@ class MongoDatabase:
             return ResultCode.SUCCESS
         return ResultCode.FAILED_TRANSACTION
 
-    def add_like_destino(self, post: models.Trips.LikeDestination):
-        result: pymongo.results.UpdateResult = self.posts.update_one(
-            {"_id": post.PostID},
-            {"$inc": {"Likes": 1}}
-        )
-        if result.acknowledged:
-            return ResultCode.SUCCESS
-        return ResultCode.FAILED_TRANSACTION
-
     def create_destino(self, destino: models.Trips.NewDestination):
         result: pymongo.results.InsertOneResult = self.destinos.insert_one(dict(destino))
         if result.acknowledged:
@@ -183,7 +174,7 @@ class MongoDatabase:
     def create_bucket_list(self, bucketList: models.Trips.BucketListCreation):
         result: pymongo.results.InsertOneResult = self.bucketLists.insert_one(dict(bucketList))
         if result.acknowledged:
-            return ResultCode.SUCCESS
+            return [ResultCode.SUCCESS, result.inserted_id]
         return ResultCode.FAILED_TRANSACTION
     
     def follow_bucket_list(self, bucket_list: models.Trips.BucketListFollower):

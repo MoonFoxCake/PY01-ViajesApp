@@ -14,13 +14,13 @@ class NewDestination(BaseModel):
     DestinationName: str
     Description: str
     Location: str
-    Likes: List[str] = []
+    Likes: int
     Comentarios: List[Comment] = []
 
 class BucketListCreation(BaseModel):
     AuthorID: str
     Destinos : List[str] = []
-    Likes: List[str] = []
+    Likes: int
     Comentarios: List[Comment] = []
 
 class BucketListFollower(BaseModel):
@@ -30,6 +30,3 @@ class BucketListFollower(BaseModel):
 class CreateTrip(BaseModel):
     Participants: List[str] = []
     Destinos: List[str] = []
-    Likes: List[str] = []
-    Comentarios: List[Comment] = []
-    

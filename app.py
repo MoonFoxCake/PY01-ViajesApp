@@ -171,7 +171,8 @@ async def add_comment(commentDict: PostComment):
 async def create_destino(destination: NewDestination):
     result = mongoDB.create_destino(destination)
     if result[0] == ResultCode.SUCCESS:
-        return {"message": "Destination created successfully"}
+        return {"message": "Destination created successfully",
+                "id": str(result[1])}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
@@ -203,8 +204,9 @@ async def like_destino(destination: LikeDestination):
 @app.post("/createBucketList")
 async def create_bucket_list(bucket_list: BucketListCreation):
     result = mongoDB.create_bucket_list(bucket_list)
-    if result == ResultCode.SUCCESS:
-        return {"message": "Bucket list created successfully"}
+    if result[0] == ResultCode.SUCCESS:
+        return {"message": "Bucket list created successfully",
+                "id": result[1]}
     else:
         return Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
